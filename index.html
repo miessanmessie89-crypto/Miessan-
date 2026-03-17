@@ -3,81 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONYX SCAN - ABIDJAN CORE</title>
+    <title>ONYX SCAN PRO - ABIDJAN CORE</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+        :root { --onyx-green: #00FF00; --onyx-dark: #0a0a0a; }
+        body { background: var(--onyx-dark); color: #fff; font-family: 'Orbitron', sans-serif; margin: 0; overflow-x: hidden; }
+
+        /* ANIMATION D'ENTRÉE (SPLASH SCREEN) */
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+            animation: fadeOut 1s forwards 2.5s;
         }
+        .loader-logo { font-size: 30px; font-weight: bold; color: var(--onyx-green); animation: pulse 1.5s infinite; }
+        @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        /* HEADER STYLE ABIDJAN CORE */
-        header {
-            width: 100%;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #111;
-            border-bottom: 2px solid #00FF00;
-        }
+        /* HEADER */
+        header { padding: 15px; background: #111; display: flex; justify-content: space-between; border-bottom: 2px solid var(--onyx-green); }
+        .logo { color: var(--onyx-green); font-weight: bold; }
 
-        .logo-text { font-weight: bold; color: #00FF00; font-size: 20px; }
-        .badge { background: #00FF00; color: #000; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-
-        /* ZONE VIDÉO DU SCANNER */
-        #scanner-container {
-            width: 90%;
-            height: 40%;
-            margin-top: 20px;
-            border: 3px solid #00FF00;
-            position: relative;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
+        /* SCANNER ZONE */
+        #scanner-container { width: 90%; height: 250px; margin: 20px auto; border: 2px solid var(--onyx-green); position: relative; border-radius: 15px; overflow: hidden; }
         video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-line { position: absolute; top: 50%; width: 100%; height: 2px; background: red; box-shadow: 0 0 10px red; animation: move 2s infinite; }
+        @keyframes move { 0%, 100% { top: 10%; } 50% { top: 90%; } }
 
-        /* LIGNE ROUGE DE SCAN */
-        .scan-line {
-            position: absolute;
-            top: 50%; width: 100%; height: 2px;
-            background: red; box-shadow: 0 0 10px red;
-            animation: move 2s infinite ease-in-out;
-        }
+        /* BOUTONS */
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .btn { background: #222; border: 1px solid var(--onyx-green); color: var(--onyx-green); padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .btn:active { background: var(--onyx-green); color: #000; }
 
-        @keyframes move {
-            0%, 100% { top: 20%; }
-            50% { top: 80%; }
-        }
-
-        /* AFFICHAGE DU RÉSULTAT */
-        #lisa-output {
-            width: 90%;
-            background: #111;
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            border-left: 5px solid #00FF00;
-            min-height: 100px;
-            font-size: 18px;
-        }
-
-        .status-dot { height: 10px; width: 10px; background-color: #00FF00; border-radius: 50%; display: inline-block; margin-right: 10px; }
+        /* RÉSULTAT & HISTORIQUE */
+        #result-box { width: 85%; background: #1a1a1a; margin: 0 auto 20px; padding: 15px; border-radius: 10px; border-left: 4px solid var(--onyx-green); }
+        .history-section { width: 90%; margin: 0 auto; padding-bottom: 30px; }
+        .history-item { background: #222; padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 14px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
+    <div id="splash">
+        <div class="loader-logo">ONYX SCAN</div>
+        <div style="color: #666; font-size: 12px; margin-top: 10px;">INITIALISATION ABIDJAN CORE...</div>
+    </div>
+
     <header>
-        <div class="logo-text">ONYX <span style="color:#fff">SCAN</span></div>
-        <div class="badge">ABIDJAN CORE</div>
+        <div class="logo">ONYX <span style="color:#fff">PRO</span></div>
+        <div style="font-size: 12px; border: 1px solid #fff; padding: 2px 5px;">v2.0</div>
     </header>
 
     <div id="scanner-container">
@@ -85,8 +58,19 @@
         <div class="scan-line"></div>
     </div>
 
-    <div id="lisa-output">
-        <span class="status-dot"></span> PRÊT À SCANNER...
+    <div class="controls">
+        <button class="btn" onclick="toggleFlash()">🔦 LAMPE</button>
+        <button class="btn" onclick="clearHistory()">🗑️ VIDER</button>
+    </div>
+
+    <div id="result-box">
+        <div id="status" style="color:var(--onyx-green)">● SYSTÈME PRÊT</div>
+        <div id="product-name" style="font-size: 18px; margin-top: 5px;">En attente de scan...</div>
+    </div>
+
+    <div class="history-section">
+        <h3 style="font-size: 14px; color: #666;">HISTORIQUE RÉCENT</h3>
+        <div id="history-list"></div>
     </div>
 
     <audio id="beep" src="https://www.soundjay.com/buttons/beep-07.mp3"></audio>
@@ -94,63 +78,87 @@
     <script>
         const codeReader = new ZXing.BrowserBarcodeReader();
         let isLocked = false;
+        let videoTrack = null;
+        let isFlashOn = false;
 
-        async function startScanner() {
+        async function startApp() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('video').srcObject = stream;
+                videoTrack = stream.getVideoTracks()[0];
                 
-                // Allumage automatique du flash si possible
-                const track = stream.getVideoTracks()[0];
-                setTimeout(async () => {
-                    const caps = track.getCapabilities();
-                    if (caps.torch) await track.applyConstraints({advanced: [{torch: true}]});
-                }, 1000);
+                loadHistory();
 
                 codeReader.decodeFromVideoDevice(null, 'video', (result) => {
                     if (result && !isLocked) {
                         isLocked = true;
-                        playFeedback();
-                        identifierProduit(result.text);
+                        processScan(result.text);
                     }
                 });
-            } catch (err) { document.getElementById('lisa-output').innerText = "Erreur caméra !"; }
+            } catch (e) { alert("Erreur Caméra : Vérifiez les autorisations."); }
         }
 
-        function playFeedback() {
+        async function processScan(code) {
             document.getElementById('beep').play();
-            if(navigator.vibrate) navigator.vibrate(100);
-        }
-
-        async function identifierProduit(code) {
-            const output = document.getElementById('lisa-output');
-            output.innerHTML = "<em>Recherche du produit... " + code + "</em>";
-
+            document.getElementById('status').innerText = "⌛ RECHERCHE...";
+            
             try {
-                // On utilise la base de données mondiale pour le nom
-                const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-                const data = await response.json();
-
+                const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+                const data = await res.json();
+                
+                let name = "Produit inconnu";
                 if (data.status === 1) {
-                    const nom = data.product.product_name || "PRODUIT INCONNU";
-                    const marque = data.product.brands || "MARQUE INCONNUE";
-                    const quantite = data.product.quantity || "";
-                    
-                    output.innerHTML = `
-                        <div style="color:#00FF00; font-weight:bold;">${marque.toUpperCase()}</div>
-                        <div style="font-size:22px;">${nom}</div>
-                        <div style="color:#aaa;">${quantite}</div>
-                    `;
-                } else {
-                    output.innerHTML = "CODE DÉTECTÉ : " + code + "<br><span style='color:orange;'>PRODUIT NON RÉPERTORIÉ</span>";
+                    name = data.product.product_name || "Sans nom";
                 }
-            } catch (e) { output.innerText = "ERREUR RÉSEAU"; }
 
-            // Déverrouille après 4 secondes pour le prochain scan
-            setTimeout(() => { isLocked = false; }, 4000);
+                document.getElementById('product-name').innerText = name;
+                saveToHistory(name, code);
+            } catch (err) {
+                document.getElementById('product-name').innerText = "Erreur réseau";
+            }
+
+            document.getElementById('status').innerText = "● SYSTÈME PRÊT";
+            setTimeout(() => { isLocked = false; }, 3000);
         }
 
-        window.onload = startScanner;
+        function toggleFlash() {
+            if (!videoTrack) return;
+            isFlashOn = !isFlashOn;
+            const caps = videoTrack.getCapabilities();
+            if (caps.torch) {
+                videoTrack.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+            } else {
+                alert("Flash non supporté sur cet appareil.");
+            }
+        }
+
+        function saveToHistory(name, code) {
+            let history = JSON.parse(localStorage.getItem('onyx_history') || "[]");
+            history.unshift({ name, code, date: new Date().toLocaleTimeString() });
+            history = history.slice(0, 5); // Garde les 5 derniers
+            localStorage.setItem('onyx_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function loadHistory() { renderHistory(); }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const history = JSON.parse(localStorage.getItem('onyx_history') || "[]");
+            list.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <span>${item.name}</span>
+                    <span style="color:#666; font-size:10px;">${item.date}</span>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('onyx_history');
+            renderHistory();
+        }
+
+        window.onload = startApp;
     </script>
 </body>
-</html>
+    </html>
