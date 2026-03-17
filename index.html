@@ -3,162 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONYX SCAN PRO - ABIDJAN CORE</title>
+    <title>ONYX SCAN ULTIMATE</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        :root { --onyx-green: #00FF00; --onyx-dark: #0a0a0a; }
-        body { background: var(--onyx-dark); color: #fff; font-family: 'Orbitron', sans-serif; margin: 0; overflow-x: hidden; }
+        :root { --onyx-green: #00FF00; --onyx-dark: #050505; }
+        body { background: var(--onyx-dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
 
-        /* ANIMATION D'ENTRÉE (SPLASH SCREEN) */
+        /* ÉCRAN DE CRÉATION DE COMPTE */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 2000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        .auth-card { width: 80%; padding: 20px; border: 1px solid var(--onyx-green); border-radius: 15px; }
+        input { background: #111; border: 1px solid #444; color: #fff; padding: 12px; margin: 10px 0; width: 90%; border-radius: 5px; }
+        
+        /* SPLASH ANIMATION */
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1000;
-            animation: fadeOut 1s forwards 2.5s;
+            background: #000; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1500;
         }
-        .loader-logo { font-size: 30px; font-weight: bold; color: var(--onyx-green); animation: pulse 1.5s infinite; }
-        @keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .loader { width: 50px; height: 50px; border: 3px solid #111; border-top: 3px solid var(--onyx-green); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* HEADER */
-        header { padding: 15px; background: #111; display: flex; justify-content: space-between; border-bottom: 2px solid var(--onyx-green); }
-        .logo { color: var(--onyx-green); font-weight: bold; }
+        /* INTERFACE PRINCIPALE */
+        header { padding: 15px; background: #111; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--onyx-green); }
+        .user-badge { font-size: 10px; background: var(--onyx-green); color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
 
-        /* SCANNER ZONE */
-        #scanner-container { width: 90%; height: 250px; margin: 20px auto; border: 2px solid var(--onyx-green); position: relative; border-radius: 15px; overflow: hidden; }
+        #scanner-container { width: 90%; height: 220px; margin: 20px auto; border: 2px solid var(--onyx-green); position: relative; border-radius: 15px; overflow: hidden; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        .scan-line { position: absolute; top: 50%; width: 100%; height: 2px; background: red; box-shadow: 0 0 10px red; animation: move 2s infinite; }
-        @keyframes move { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+        
+        .lang-bar { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
+        .lang-btn { background: none; border: 1px solid #444; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .lang-btn.active { border-color: var(--onyx-green); color: var(--onyx-green); }
 
-        /* BOUTONS */
-        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .btn { background: #222; border: 1px solid var(--onyx-green); color: var(--onyx-green); padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .btn:active { background: var(--onyx-green); color: #000; }
-
-        /* RÉSULTAT & HISTORIQUE */
-        #result-box { width: 85%; background: #1a1a1a; margin: 0 auto 20px; padding: 15px; border-radius: 10px; border-left: 4px solid var(--onyx-green); }
-        .history-section { width: 90%; margin: 0 auto; padding-bottom: 30px; }
-        .history-item { background: #222; padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 14px; display: flex; justify-content: space-between; }
+        .btn { background: #222; border: 1px solid var(--onyx-green); color: var(--onyx-green); padding: 10px 15px; border-radius: 5px; font-weight: bold; }
+        #result-box { width: 85%; background: #111; margin: 15px auto; padding: 15px; border-radius: 10px; border-left: 4px solid var(--onyx-green); min-height: 60px; }
+        .history-item { background: #1a1a1a; padding: 10px; margin: 5px 5%; border-radius: 5px; font-size: 13px; border-bottom: 1px solid #333; }
     </style>
 </head>
 <body>
 
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2 id="tr-auth-title" style="color:var(--onyx-green)">ONYX IDENTITY</h2>
+            <p id="tr-auth-sub" style="font-size: 12px; color: #888;">CRÉER VOTRE PROFIL ABIDJAN CORE</p>
+            <input type="text" id="username" placeholder="Pseudo / Name">
+            <input type="password" id="pin" placeholder="Code PIN (4 chiffres)">
+            <button class="btn" onclick="createAccount()" style="width: 100%; margin-top: 10px;">ACCÉDER</button>
+        </div>
+    </div>
+
     <div id="splash">
-        <div class="loader-logo">ONYX SCAN</div>
-        <div style="color: #666; font-size: 12px; margin-top: 10px;">INITIALISATION ABIDJAN CORE...</div>
+        <div class="loader"></div>
+        <p style="color:var(--onyx-green); margin-top: 20px; letter-spacing: 2px;">ONYX LOADING...</p>
     </div>
 
     <header>
-        <div class="logo">ONYX <span style="color:#fff">PRO</span></div>
-        <div style="font-size: 12px; border: 1px solid #fff; padding: 2px 5px;">v2.0</div>
+        <div><span style="color:var(--onyx-green); font-weight:bold;">ONYX</span> <span id="user-display">SCAN</span></div>
+        <div class="user-badge" id="tr-status">MEMBRE ACTIF</div>
     </header>
+
+    <div class="lang-bar">
+        <button class="lang-btn active" onclick="changeLang('fr')">FR</button>
+        <button class="lang-btn" onclick="changeLang('en')">EN</button>
+        <button class="lang-btn" onclick="changeLang('es')">ES</button>
+    </div>
 
     <div id="scanner-container">
         <video id="video"></video>
-        <div class="scan-line"></div>
     </div>
 
-    <div class="controls">
-        <button class="btn" onclick="toggleFlash()">🔦 LAMPE</button>
-        <button class="btn" onclick="clearHistory()">🗑️ VIDER</button>
+    <div style="text-align:center;">
+        <button class="btn" onclick="toggleFlash()">🔦 FLASH</button>
     </div>
 
     <div id="result-box">
-        <div id="status" style="color:var(--onyx-green)">● SYSTÈME PRÊT</div>
-        <div id="product-name" style="font-size: 18px; margin-top: 5px;">En attente de scan...</div>
+        <div id="tr-ready" style="color:var(--onyx-green); font-size: 12px;">● SYSTÈME PRÊT</div>
+        <div id="product-name">...</div>
     </div>
 
-    <div class="history-section">
-        <h3 style="font-size: 14px; color: #666;">HISTORIQUE RÉCENT</h3>
-        <div id="history-list"></div>
-    </div>
+    <div id="history-list"></div>
 
     <audio id="beep" src="https://www.soundjay.com/buttons/beep-07.mp3"></audio>
 
     <script>
         const codeReader = new ZXing.BrowserBarcodeReader();
-        let isLocked = false;
         let videoTrack = null;
         let isFlashOn = false;
+        let currentLang = 'fr';
 
-        async function startApp() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('video').srcObject = stream;
-                videoTrack = stream.getVideoTracks()[0];
-                
-                loadHistory();
+        const texts = {
+            fr: { authT: "IDENTITÉ ONYX", authS: "CRÉER VOTRE PROFIL", status: "MEMBRE ACTIF", ready: "● SYSTÈME PRÊT", wait: "RECHERCHE...", unknown: "Produit inconnu" },
+            en: { authT: "ONYX IDENTITY", authS: "CREATE YOUR PROFILE", status: "ACTIVE MEMBER", ready: "● SYSTEM READY", wait: "SEARCHING...", unknown: "Unknown product" },
+            es: { authT: "IDENTIDAD ONYX", authS: "CREAR TU PERFIL", status: "MIEMBRO ACTIVO", ready: "● SISTEMA LISTO", wait: "BUSCANDO...", unknown: "Producto desconocido" }
+        };
 
-                codeReader.decodeFromVideoDevice(null, 'video', (result) => {
-                    if (result && !isLocked) {
-                        isLocked = true;
-                        processScan(result.text);
-                    }
-                });
-            } catch (e) { alert("Erreur Caméra : Vérifiez les autorisations."); }
+        function changeLang(l) {
+            currentLang = l;
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = texts[currentLang];
+            document.getElementById('tr-auth-title').innerText = t.authT;
+            document.getElementById('tr-auth-sub').innerText = t.authS;
+            document.getElementById('tr-status').innerText = t.status;
+            document.getElementById('tr-ready').innerText = t.ready;
+        }
+
+        function createAccount() {
+            const user = document.getElementById('username').value;
+            if(!user) return alert("Nom requis !");
+            localStorage.setItem('onyx_user', user);
+            
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('splash').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('splash').style.display = 'none';
+                document.getElementById('user-display').innerText = user.toUpperCase();
+                startScanner();
+            }, 2000);
+        }
+
+        async function startScanner() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('video').srcObject = stream;
+            videoTrack = stream.getVideoTracks()[0];
+            codeReader.decodeFromVideoDevice(null, 'video', (result) => {
+                if (result) processScan(result.text);
+            });
         }
 
         async function processScan(code) {
             document.getElementById('beep').play();
-            document.getElementById('status').innerText = "⌛ RECHERCHE...";
-            
-            try {
-                const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-                const data = await res.json();
-                
-                let name = "Produit inconnu";
-                if (data.status === 1) {
-                    name = data.product.product_name || "Sans nom";
-                }
+            document.getElementById('tr-ready').innerText = texts[currentLang].wait;
+            const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+            const data = await res.json();
+            const name = (data.status === 1) ? data.product.product_name : texts[currentLang].unknown;
+            document.getElementById('product-name').innerText = name;
+            addToHistory(name);
+            setTimeout(() => document.getElementById('tr-ready').innerText = texts[currentLang].ready, 3000);
+        }
 
-                document.getElementById('product-name').innerText = name;
-                saveToHistory(name, code);
-            } catch (err) {
-                document.getElementById('product-name').innerText = "Erreur réseau";
-            }
-
-            document.getElementById('status').innerText = "● SYSTÈME PRÊT";
-            setTimeout(() => { isLocked = false; }, 3000);
+        function addToHistory(n) {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<b>${n}</b> <span style="float:right; font-size:10px;">${new Date().toLocaleTimeString()}</span>`;
+            document.getElementById('history-list').prepend(item);
         }
 
         function toggleFlash() {
-            if (!videoTrack) return;
-            isFlashOn = !isFlashOn;
-            const caps = videoTrack.getCapabilities();
-            if (caps.torch) {
+            if(videoTrack) {
+                isFlashOn = !isFlashOn;
                 videoTrack.applyConstraints({ advanced: [{ torch: isFlashOn }] });
-            } else {
-                alert("Flash non supporté sur cet appareil.");
             }
         }
 
-        function saveToHistory(name, code) {
-            let history = JSON.parse(localStorage.getItem('onyx_history') || "[]");
-            history.unshift({ name, code, date: new Date().toLocaleTimeString() });
-            history = history.slice(0, 5); // Garde les 5 derniers
-            localStorage.setItem('onyx_history', JSON.stringify(history));
-            renderHistory();
-        }
-
-        function loadHistory() { renderHistory(); }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            const history = JSON.parse(localStorage.getItem('onyx_history') || "[]");
-            list.innerHTML = history.map(item => `
-                <div class="history-item">
-                    <span>${item.name}</span>
-                    <span style="color:#666; font-size:10px;">${item.date}</span>
-                </div>
-            `).join('');
-        }
-
-        function clearHistory() {
-            localStorage.removeItem('onyx_history');
-            renderHistory();
-        }
-
-        window.onload = startApp;
+        window.onload = () => {
+            if(localStorage.getItem('onyx_user')) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('user-display').innerText = localStorage.getItem('onyx_user').toUpperCase();
+                startScanner();
+            }
+        };
     </script>
 </body>
     </html>
