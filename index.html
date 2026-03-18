@@ -3,155 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONYX SCAN - CI EDITION</title>
+    <title>ONYX SCAN ULTRA-POWER</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        :root { --onyx-green: #00FF00; --onyx-orange: #FF8800; --onyx-dark: #050505; }
-        body { background: var(--onyx-dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
-
-        header { padding: 12px 15px; background: #111; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--onyx-green); }
-        .badge-ci { font-size: 10px; background: var(--onyx-orange); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        :root { --onyx: #00FF00; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; text-align: center; }
         
-        #scanner-container { width: 92%; height: 220px; margin: 15px auto; border: 2px solid var(--onyx-green); border-radius: 20px; overflow: hidden; position: relative; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
+        /* ZONE DE SCAN AMÉLIORÉE */
+        #scanner-wrapper { 
+            position: relative; width: 95%; height: 300px; 
+            margin: 15px auto; border: 3px solid var(--onyx); 
+            border-radius: 20px; overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+        }
         video { width: 100%; height: 100%; object-fit: cover; }
         
-        #result-box { width: 88%; background: #111; margin: 10px auto; padding: 15px; border-radius: 12px; border-left: 4px solid var(--onyx-orange); }
-        .price-tag { color: var(--onyx-orange); font-weight: bold; font-size: 20px; margin-top: 5px; }
+        /* VISEUR LASER */
+        .laser { 
+            position: absolute; top: 50%; left: 0; width: 100%; height: 2px; 
+            background: red; box-shadow: 0 0 15px red;
+            animation: move 1.5s infinite;
+        }
+        @keyframes move { 0%, 100% { top: 20%; } 50% { top: 80%; } }
 
-        .btn-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .btn-ci { background: #222; border: 1px solid var(--onyx-green); color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-        
-        #manual-ci { display: none; background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 5%; }
-        input { background: #000; border: 1px solid #444; color: #fff; padding: 10px; width: 85%; margin-bottom: 10px; border-radius: 5px; }
+        .btn { 
+            background: #111; border: 2px solid var(--onyx); color: var(--onyx); 
+            padding: 12px; border-radius: 10px; font-weight: bold; margin: 5px;
+            cursor: pointer; width: 45%;
+        }
+        #result-box { padding: 20px; border-top: 2px solid var(--onyx); background: #111; min-height: 100px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>
-            <span style="color:var(--onyx-green); font-weight:bold;">ONYX</span> 
-            <span style="color:#fff">MESSIE</span>
-            <span class="badge-ci">CIV 225</span>
-        </div>
-        <div style="font-size: 10px; color: #666;">ABIDJAN CORE</div>
-    </header>
+    <h2 style="color:var(--onyx); margin-top:10px;">ONYX ULTRA SCANNER</h2>
 
-    <div id="scanner-container">
+    <div id="scanner-wrapper">
         <video id="video"></video>
+        <div class="laser"></div>
     </div>
 
-    <div class="btn-group">
-        <button class="btn-ci" onclick="toggleFlash()">🔦 LAMPE</button>
-        <button class="btn-ci" onclick="showManual()">✏️ ENREGISTRER PRODUIT</button>
+    <div style="display:flex; justify-content:center;">
+        <button class="btn" onclick="toggleFlash()">🔦 LAMPE</button>
+        <button class="btn" onclick="applyZoom()">🔍 ZOOM MAX</button>
     </div>
 
     <div id="result-box">
-        <div id="status" style="color:var(--onyx-green); font-size: 11px;">● SCANNER PRÊT...</div>
-        <div id="product-name" style="font-size: 18px; margin: 8px 0;">En attente d'un article</div>
-        <div id="product-price" class="price-tag"></div>
-        
-        <div id="google-btn-area" style="display:none; margin-top: 10px;">
-            <p style="font-size: 11px; color: #888;">Pas trouvé ?</p>
-            <button class="btn-ci" style="border-color: #4285F4;" onclick="searchGoogle()">🔎 Recherche Profonde</button>
-        </div>
+        <div id="status" style="font-size:12px; color:#888;">CAPTEUR PRÊT...</div>
+        <div id="name" style="font-size:22px; font-weight:bold; margin-top:10px;">Scannez l'article</div>
     </div>
-
-    <div id="manual-ci">
-        <h4 style="margin:0 0 10px 0; font-size: 14px; color: var(--onyx-orange);">AJOUTER AU CATALOGUE IVOIRE</h4>
-        <input type="text" id="in-name" placeholder="Nom (ex: Cristaline 1.5L)">
-        <input type="number" id="in-price" placeholder="Prix en FCFA">
-        <button class="btn-ci" onclick="saveToCI()" style="width:100%; background:var(--onyx-green); color:#000;">ENREGISTRER</button>
-    </div>
-
-    <div id="history-list" style="padding: 10px 5%;"></div>
 
     <audio id="beep" src="https://www.soundjay.com/buttons/beep-07.mp3"></audio>
 
     <script>
         const codeReader = new ZXing.BrowserBarcodeReader();
         let videoTrack = null;
-        let lastScannedCode = "";
+        let zoomLevel = 1;
 
-        async function init() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById('video').srcObject = stream;
-            videoTrack = stream.getVideoTracks()[0];
-            codeReader.decodeFromVideoDevice(null, 'video', (result) => {
-                if (result) {
-                    document.getElementById('beep').play();
-                    handleScan(result.text);
-                }
-            });
-        }
-
-        async function handleScan(code) {
-            lastScannedCode = code;
-            document.getElementById('status').innerText = "VÉRIFICATION BASES CI...";
-            document.getElementById('manual-ci').style.display = "none";
-            document.getElementById('google-btn-area').style.display = "none";
-            document.getElementById('product-price').innerText = "";
-
-            // 1. Check Local Storage
-            const saved = JSON.parse(localStorage.getItem("ci_db_" + code));
-            if(saved) {
-                showResult(saved.name, "Catalogue Personnel", saved.price);
-                return;
-            }
-
-            // 2. Open Food Facts
+        async function startUltraScan() {
             try {
-                const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-                const data = await res.json();
-                if (data.status === 1) {
-                    showResult(data.product.product_name, "Base Mondiale");
-                    return;
-                }
-            } catch (e) {}
+                // FORCE LA HAUTE RÉSOLUTION ET LA CAMÉRA ARRIÈRE
+                const constraints = {
+                    video: {
+                        facingMode: { exact: "environment" },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        focusMode: "continuous"
+                    }
+                };
 
-            // 3. Fail
-            document.getElementById('product-name').innerText = "Produit non répertorié";
-            document.getElementById('status').innerText = "CODE: " + code;
-            document.getElementById('google-btn-area').style.display = "block";
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const videoElement = document.getElementById('video');
+                videoElement.srcObject = stream;
+                videoTrack = stream.getVideoTracks()[0];
+
+                // LANCE LA DÉTECTION RAPIDE
+                codeReader.decodeFromVideoDevice(null, 'video', (result) => {
+                    if (result) {
+                        document.getElementById('beep').play();
+                        handleResult(result.text);
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                // Si la caméra "exact environment" échoue, on prend la caméra normale
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('video').srcObject = stream;
+            }
         }
 
-        function showResult(name, source, price = "") {
-            document.getElementById('product-name').innerText = name;
-            document.getElementById('status').innerText = "VIA : " + source;
-            if(price) document.getElementById('product-price').innerText = price + " FCFA";
-            addToHistory(name, price);
+        async function handleResult(code) {
+            document.getElementById('status').innerText = "CODE DÉTECTÉ : " + code;
+            const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+            const data = await res.json();
+            document.getElementById('name').innerText = (data.status === 1) ? data.product.product_name : "Inconnu ("+code+")";
         }
 
-        function searchGoogle() {
-            window.open("https://www.google.com/search?q=produit+codebarre+" + lastScannedCode, "_blank");
-        }
-
-        function showManual() { document.getElementById('manual-ci').style.display = "block"; }
-
-        function saveToCI() {
-            const n = document.getElementById('in-name').value;
-            const p = document.getElementById('in-price').value;
-            if(!n) return;
-            localStorage.setItem("ci_db_" + lastScannedCode, JSON.stringify({name: n, price: p}));
-            showResult(n, "Catalogue Personnel", p);
-            document.getElementById('manual-ci').style.display = "none";
-        }
-
-        function addToHistory(n, p) {
-            const h = document.getElementById('history-list');
-            const d = document.createElement('div');
-            d.style = "background:#111; padding:10px; border-bottom:1px solid #222; font-size:13px;";
-            d.innerHTML = `<b>${n}</b> ${p ? '<span style="color:orange">'+p+' FCFA</span>' : ''} <span style="float:right; font-size:10px; color:#444;">${new Date().toLocaleTimeString()}</span>`;
-            h.prepend(d);
+        function applyZoom() {
+            if (videoTrack && videoTrack.getCapabilities().zoom) {
+                zoomLevel = zoomLevel === 1 ? 2.5 : 1; // Bascule entre zoom x1 et x2.5
+                videoTrack.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
+                document.getElementById('status').innerText = "ZOOM : x" + zoomLevel;
+            } else {
+                alert("Ton téléphone ne permet pas le zoom auto via le navigateur.");
+            }
         }
 
         function toggleFlash() {
-            if(videoTrack) {
-                const cur = videoTrack.getSettings().torch;
-                videoTrack.applyConstraints({ advanced: [{ torch: !cur }] });
+            if (videoTrack && videoTrack.getCapabilities().torch) {
+                const isTorch = videoTrack.getSettings().torch;
+                videoTrack.applyConstraints({ advanced: [{ torch: !isTorch }] });
             }
         }
 
-        window.onload = init;
+        window.onload = startUltraScan;
     </script>
 </body>
 </html>
+
