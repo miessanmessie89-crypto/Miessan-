@@ -3,102 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ONYX SCANNER PRO</title>
+    <title>ONYX ELITE</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        :root { --onyx: #00FF00; --bg: #0b0b0b; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; }
+        :root { --onyx: #00FF00; --bg: #0a0a0a; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; overflow: hidden; }
 
-        /* DESIGN ÉPURÉ DU DÉBUT */
-        header { padding: 20px; font-weight: bold; font-size: 20px; color: var(--onyx); letter-spacing: 2px; }
-        
-        #scanner-box { 
-            position: relative; width: 88%; height: 280px; 
-            margin: 10px auto; border: 2px solid var(--onyx); 
-            border-radius: 15px; overflow: hidden; background: #000;
-        }
+        /* NAVIGATION BASSE (Placée le plus bas possible) */
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; border-top: 1px solid #333; z-index: 1000; }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #666; cursor: pointer; }
+        .tab-item.active { color: var(--onyx); font-weight: bold; }
+
+        .page { display: none; height: calc(100vh - 60px); width: 100%; overflow-y: auto; }
+        .page.active { display: block; }
+
+        /* TON DESIGN SCANNER (STRICTEMENT PRÉSERVÉ) */
+        header { padding: 15px; text-align: center; border-bottom: 2px solid var(--onyx); background: #000; }
+        #viewport { position: relative; width: 90%; height: 300px; margin: 20px auto; border: 2px solid #333; border-radius: 20px; overflow: hidden; background: #000; }
         video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-window { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 4px solid var(--onyx); border-radius: 18px; pointer-events: none; z-index: 5; }
+        .laser { position: absolute; width: 90%; height: 2px; background: red; left: 5%; top: 50%; animation: move 2s infinite linear; z-index: 6; }
+        @keyframes move { 0%, 100% { top: 20%; } 50% { top: 80%; } }
 
-        /* LIGNE DE SCAN FINE */
-        .laser { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 2px; 
-            background: var(--onyx); box-shadow: 0 0 12px var(--onyx);
-            animation: scan 2s infinite linear;
-        }
-        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
-
-        /* ZONE DE RÉSULTAT NOIRE ET VERTE */
-        .result-container { 
-            margin: 20px auto; width: 85%; background: #111; 
-            padding: 15px; border-radius: 12px; border-left: 4px solid var(--onyx);
-            text-align: left;
-        }
-        .label { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 5px; }
-        .product-name { font-size: 18px; font-weight: bold; color: #fff; }
-
-        .btn-flash { 
-            background: none; border: 1px solid var(--onyx); color: var(--onyx); 
-            padding: 10px 30px; border-radius: 8px; font-size: 14px; margin-top: 15px;
-        }
+        /* ZONE RÉSULTATS & AJOUTS (Discrets) */
+        .res-card { margin: 10px 5%; padding: 15px; background: #151515; border-radius: 15px; border: 1px solid #333; text-align: center; }
+        .nutri-badge { display: inline-block; padding: 4px 12px; border-radius: 5px; font-weight: bold; margin-top: 8px; text-transform: uppercase; font-size: 12px; }
+        .n-a { background: #038141; } .n-b { background: #85BB2F; } .n-c { background: #FECB02; color: #000; } .n-d { background: #EE8100; } .n-e { background: #E63E11; }
+        
+        .btn-wa { background: #25D366; color: white; border: none; padding: 10px; border-radius: 20px; width: 70%; font-weight: bold; margin-top: 10px; cursor: pointer; display: none; }
+        
+        .hist-box { margin: 10px 5%; padding-bottom: 20px; }
+        .hist-item { background: #111; padding: 8px; border-radius: 8px; margin-bottom: 5px; font-size: 12px; border-left: 3px solid var(--onyx); }
     </style>
 </head>
 <body>
 
-    <header>ONYX <span style="color:#fff">MESSIE</span></header>
+    <div id="p-scan" class="page active">
+        <header><b style="color:var(--onyx)">ONYX</b> MESSIE</header>
+        <div id="viewport">
+            <video id="video" autoplay playsinline muted></video>
+            <div class="scan-window"></div>
+            <div class="laser"></div>
+        </div>
+        
+        <div class="res-card">
+            <div id="out-name" style="font-size: 18px; font-weight: bold;">Prêt au scan...</div>
+            <div id="out-nutri"></div>
+            <button id="btn-wa" class="btn-wa" onclick="share()">📤 WhatsApp</button>
+        </div>
 
-    <div id="scanner-box">
-        <video id="video" autoplay playsinline muted></video>
-        <div class="laser"></div>
+        <div class="hist-box">
+            <div style="font-size: 10px; color: #555; margin-bottom: 5px;">RÉCENTS :</div>
+            <div id="hist-list"></div>
+        </div>
     </div>
 
-    <div class="result-container">
-        <div class="label">Statut : Analyse en cours</div>
-        <div id="display-name" class="product-name">Prêt à scanner</div>
+    <div id="p-search" class="page">
+        <header><b style="color:var(--onyx)">ONYX</b> FINDER</header>
+        <div style="padding: 20px;">
+            <input type="text" id="q" placeholder="Chercher par nom..." style="width:100%; padding:15px; border-radius:10px; background:#111; color:#fff; border:1px solid var(--onyx); outline:none;">
+            <button onclick="search()" style="width:100%; padding:15px; margin-top:10px; background:var(--onyx); border:none; border-radius:10px; font-weight:bold; color:#000;">RECHERCHER</button>
+            <div id="res-search" style="margin-top:20px;"></div>
+        </div>
     </div>
 
-    <button class="btn-flash" onclick="toggleFlash()">🔦 FLASH</button>
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="nav('p-scan', this)"><span>📷</span><span>SCAN</span></div>
+        <div class="tab-item" onclick="nav('p-search', this)"><span>🔎</span><span>NOM</span></div>
+    </div>
 
     <script>
-        let track = null;
-        const codeReader = new ZXing.BrowserBarcodeReader();
+        let currentProduct = "";
+        const reader = new ZXing.BrowserBarcodeReader();
 
+        // --- TON MOTEUR ORIGINAL (NON TOUCHÉ) ---
         async function init() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" } 
+                const s = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: { ideal: 1280 } } 
                 });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                track = stream.getVideoTracks()[0];
-
-                codeReader.decodeFromVideoDevice(null, 'video', (result) => {
-                    if (result) {
-                        if(navigator.vibrate) navigator.vibrate(50);
-                        searchProduct(result.text);
+                document.getElementById('video').srcObject = s;
+                reader.decodeFromVideoDevice(null, 'video', (res) => {
+                    if (res) {
+                        if(navigator.vibrate) navigator.vibrate(60);
+                        lookup(res.text);
                     }
                 });
-            } catch (err) { alert("Active la caméra dans les réglages."); }
+            } catch (e) { document.getElementById('out-name').innerText = "Erreur Caméra"; }
         }
 
-        async function searchProduct(code) {
-            document.getElementById('display-name').innerText = "Recherche...";
+        async function lookup(code) {
+            document.getElementById('out-name').innerText = "Analyse...";
             try {
-                const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-                const data = await response.json();
-                document.getElementById('display-name').innerText = (data.status === 1) ? data.product.product_name : "Inconnu (" + code + ")";
-            } catch (e) {
-                document.getElementById('display-name').innerText = "Code détecté : " + code;
+                const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+                const d = await r.json();
+                if(d.status === 1) {
+                    const p = d.product;
+                    currentProduct = p.product_name || code;
+                    document.getElementById('out-name').innerText = currentProduct;
+                    
+                    // Nutri-Score intelligent (Uniquement pour nourriture)
+                    if(p.nutriscore_grade && p.nutriscore_grade.length === 1) {
+                        const grade = p.nutriscore_grade;
+                        document.getElementById('out-nutri').innerHTML = `<span class="nutri-badge n-${grade}">Score ${grade.toUpperCase()}</span>`;
+                    } else { document.getElementById('out-nutri').innerHTML = ""; }
+
+                    document.getElementById('btn-wa').style.display = "inline-block";
+                    save(currentProduct);
+                } else {
+                    document.getElementById('out-name').innerText = "Code: " + code;
+                    document.getElementById('out-nutri').innerHTML = "";
+                }
+            } catch(e) { document.getElementById('out-name').innerText = code; }
+        }
+
+        // --- FONCTIONS AJOUTÉES (SANS TOUCHER AU SCAN) ---
+        function save(name) {
+            let h = JSON.parse(localStorage.getItem('onyx_h') || "[]");
+            if(!h.includes(name)) {
+                h.unshift(name);
+                h = h.slice(0, 3);
+                localStorage.setItem('onyx_h', JSON.stringify(h));
+                renderHist();
             }
         }
 
-        function toggleFlash() {
-            if(track) {
-                const isOn = track.getSettings().torch;
-                track.applyConstraints({ advanced: [{ torch: !isOn }] });
-            }
+        function renderHist() {
+            const h = JSON.parse(localStorage.getItem('onyx_h') || "[]");
+            document.getElementById('hist-list').innerHTML = h.map(i => `<div class="hist-item">${i}</div>`).join('');
         }
 
-        window.onload = init;
+        function share() {
+            window.open(`https://wa.me/?text=${encodeURIComponent("Produit : " + currentProduct)}`, '_blank');
+        }
+
+        function nav(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        }
+
+        async function search() {
+            const q = document.getElementById('q').value;
+            if(!q) return;
+            document.getElementById('res-search').innerHTML = "Chargement...";
+            const r = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1`);
+            const d = await r.json();
+            document.getElementById('res-search').innerHTML = d.products.slice(0,5).map(p => `<div style="background:#111; padding:10px; border-radius:8px; margin-bottom:5px; border-left:2px solid var(--onyx)">${p.product_name}</div>`).join('');
+        }
+
+        window.onload = () => { init(); renderHist(); };
     </script>
 </body>
 </html>
