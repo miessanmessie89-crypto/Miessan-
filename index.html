@@ -3,174 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONYX SCAN ULTIMATE</title>
+    <title>ONYX SCAN - CI EDITION</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        :root { --onyx-green: #00FF00; --onyx-dark: #050505; }
-        body { background: var(--onyx-dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        :root { --onyx-green: #00FF00; --onyx-orange: #FF8800; --onyx-dark: #050505; }
+        body { background: var(--onyx-dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
 
-        /* ÉCRAN DE CRÉATION DE COMPTE */
-        #auth-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 2000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-        }
-        .auth-card { width: 80%; padding: 20px; border: 1px solid var(--onyx-green); border-radius: 15px; }
-        input { background: #111; border: 1px solid #444; color: #fff; padding: 12px; margin: 10px 0; width: 90%; border-radius: 5px; }
+        header { padding: 12px 15px; background: #111; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--onyx-green); }
+        .badge-ci { font-size: 10px; background: var(--onyx-orange); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
-        /* SPLASH ANIMATION */
-        #splash {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1500;
-        }
-        .loader { width: 50px; height: 50px; border: 3px solid #111; border-top: 3px solid var(--onyx-green); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* INTERFACE PRINCIPALE */
-        header { padding: 15px; background: #111; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--onyx-green); }
-        .user-badge { font-size: 10px; background: var(--onyx-green); color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
-
-        #scanner-container { width: 90%; height: 220px; margin: 20px auto; border: 2px solid var(--onyx-green); position: relative; border-radius: 15px; overflow: hidden; }
+        #scanner-container { width: 92%; height: 220px; margin: 15px auto; border: 2px solid var(--onyx-green); border-radius: 20px; overflow: hidden; position: relative; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
         video { width: 100%; height: 100%; object-fit: cover; }
         
-        .lang-bar { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
-        .lang-btn { background: none; border: 1px solid #444; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
-        .lang-btn.active { border-color: var(--onyx-green); color: var(--onyx-green); }
+        #result-box { width: 88%; background: #111; margin: 10px auto; padding: 15px; border-radius: 12px; border-left: 4px solid var(--onyx-orange); }
+        .price-tag { color: var(--onyx-orange); font-weight: bold; font-size: 20px; margin-top: 5px; }
 
-        .btn { background: #222; border: 1px solid var(--onyx-green); color: var(--onyx-green); padding: 10px 15px; border-radius: 5px; font-weight: bold; }
-        #result-box { width: 85%; background: #111; margin: 15px auto; padding: 15px; border-radius: 10px; border-left: 4px solid var(--onyx-green); min-height: 60px; }
-        .history-item { background: #1a1a1a; padding: 10px; margin: 5px 5%; border-radius: 5px; font-size: 13px; border-bottom: 1px solid #333; }
+        .btn-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .btn-ci { background: #222; border: 1px solid var(--onyx-green); color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+        
+        #manual-ci { display: none; background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 5%; }
+        input { background: #000; border: 1px solid #444; color: #fff; padding: 10px; width: 85%; margin-bottom: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <div class="auth-card">
-            <h2 id="tr-auth-title" style="color:var(--onyx-green)">ONYX IDENTITY</h2>
-            <p id="tr-auth-sub" style="font-size: 12px; color: #888;">CRÉER VOTRE PROFIL ABIDJAN CORE</p>
-            <input type="text" id="username" placeholder="Pseudo / Name">
-            <input type="password" id="pin" placeholder="Code PIN (4 chiffres)">
-            <button class="btn" onclick="createAccount()" style="width: 100%; margin-top: 10px;">ACCÉDER</button>
-        </div>
-    </div>
-
-    <div id="splash">
-        <div class="loader"></div>
-        <p style="color:var(--onyx-green); margin-top: 20px; letter-spacing: 2px;">ONYX LOADING...</p>
-    </div>
-
     <header>
-        <div><span style="color:var(--onyx-green); font-weight:bold;">ONYX</span> <span id="user-display">SCAN</span></div>
-        <div class="user-badge" id="tr-status">MEMBRE ACTIF</div>
+        <div>
+            <span style="color:var(--onyx-green); font-weight:bold;">ONYX</span> 
+            <span style="color:#fff">MESSIE</span>
+            <span class="badge-ci">CIV 225</span>
+        </div>
+        <div style="font-size: 10px; color: #666;">ABIDJAN CORE</div>
     </header>
-
-    <div class="lang-bar">
-        <button class="lang-btn active" onclick="changeLang('fr')">FR</button>
-        <button class="lang-btn" onclick="changeLang('en')">EN</button>
-        <button class="lang-btn" onclick="changeLang('es')">ES</button>
-    </div>
 
     <div id="scanner-container">
         <video id="video"></video>
     </div>
 
-    <div style="text-align:center;">
-        <button class="btn" onclick="toggleFlash()">🔦 FLASH</button>
+    <div class="btn-group">
+        <button class="btn-ci" onclick="toggleFlash()">🔦 LAMPE</button>
+        <button class="btn-ci" onclick="showManual()">✏️ ENREGISTRER PRODUIT</button>
     </div>
 
     <div id="result-box">
-        <div id="tr-ready" style="color:var(--onyx-green); font-size: 12px;">● SYSTÈME PRÊT</div>
-        <div id="product-name">...</div>
+        <div id="status" style="color:var(--onyx-green); font-size: 11px;">● SCANNER PRÊT...</div>
+        <div id="product-name" style="font-size: 18px; margin: 8px 0;">En attente d'un article</div>
+        <div id="product-price" class="price-tag"></div>
+        
+        <div id="google-btn-area" style="display:none; margin-top: 10px;">
+            <p style="font-size: 11px; color: #888;">Pas trouvé ?</p>
+            <button class="btn-ci" style="border-color: #4285F4;" onclick="searchGoogle()">🔎 Recherche Profonde</button>
+        </div>
     </div>
 
-    <div id="history-list"></div>
+    <div id="manual-ci">
+        <h4 style="margin:0 0 10px 0; font-size: 14px; color: var(--onyx-orange);">AJOUTER AU CATALOGUE IVOIRE</h4>
+        <input type="text" id="in-name" placeholder="Nom (ex: Cristaline 1.5L)">
+        <input type="number" id="in-price" placeholder="Prix en FCFA">
+        <button class="btn-ci" onclick="saveToCI()" style="width:100%; background:var(--onyx-green); color:#000;">ENREGISTRER</button>
+    </div>
+
+    <div id="history-list" style="padding: 10px 5%;"></div>
 
     <audio id="beep" src="https://www.soundjay.com/buttons/beep-07.mp3"></audio>
 
     <script>
         const codeReader = new ZXing.BrowserBarcodeReader();
         let videoTrack = null;
-        let isFlashOn = false;
-        let currentLang = 'fr';
+        let lastScannedCode = "";
 
-        const texts = {
-            fr: { authT: "IDENTITÉ ONYX", authS: "CRÉER VOTRE PROFIL", status: "MEMBRE ACTIF", ready: "● SYSTÈME PRÊT", wait: "RECHERCHE...", unknown: "Produit inconnu" },
-            en: { authT: "ONYX IDENTITY", authS: "CREATE YOUR PROFILE", status: "ACTIVE MEMBER", ready: "● SYSTEM READY", wait: "SEARCHING...", unknown: "Unknown product" },
-            es: { authT: "IDENTIDAD ONYX", authS: "CREAR TU PERFIL", status: "MIEMBRO ACTIVO", ready: "● SISTEMA LISTO", wait: "BUSCANDO...", unknown: "Producto desconocido" }
-        };
-
-        function changeLang(l) {
-            currentLang = l;
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            updateUI();
-        }
-
-        function updateUI() {
-            const t = texts[currentLang];
-            document.getElementById('tr-auth-title').innerText = t.authT;
-            document.getElementById('tr-auth-sub').innerText = t.authS;
-            document.getElementById('tr-status').innerText = t.status;
-            document.getElementById('tr-ready').innerText = t.ready;
-        }
-
-        function createAccount() {
-            const user = document.getElementById('username').value;
-            if(!user) return alert("Nom requis !");
-            localStorage.setItem('onyx_user', user);
-            
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('splash').style.display = 'flex';
-            
-            setTimeout(() => {
-                document.getElementById('splash').style.display = 'none';
-                document.getElementById('user-display').innerText = user.toUpperCase();
-                startScanner();
-            }, 2000);
-        }
-
-        async function startScanner() {
+        async function init() {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById('video').srcObject = stream;
             videoTrack = stream.getVideoTracks()[0];
             codeReader.decodeFromVideoDevice(null, 'video', (result) => {
-                if (result) processScan(result.text);
+                if (result) {
+                    document.getElementById('beep').play();
+                    handleScan(result.text);
+                }
             });
         }
 
-        async function processScan(code) {
-            document.getElementById('beep').play();
-            document.getElementById('tr-ready').innerText = texts[currentLang].wait;
-            const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-            const data = await res.json();
-            const name = (data.status === 1) ? data.product.product_name : texts[currentLang].unknown;
-            document.getElementById('product-name').innerText = name;
-            addToHistory(name);
-            setTimeout(() => document.getElementById('tr-ready').innerText = texts[currentLang].ready, 3000);
+        async function handleScan(code) {
+            lastScannedCode = code;
+            document.getElementById('status').innerText = "VÉRIFICATION BASES CI...";
+            document.getElementById('manual-ci').style.display = "none";
+            document.getElementById('google-btn-area').style.display = "none";
+            document.getElementById('product-price').innerText = "";
+
+            // 1. Check Local Storage
+            const saved = JSON.parse(localStorage.getItem("ci_db_" + code));
+            if(saved) {
+                showResult(saved.name, "Catalogue Personnel", saved.price);
+                return;
+            }
+
+            // 2. Open Food Facts
+            try {
+                const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+                const data = await res.json();
+                if (data.status === 1) {
+                    showResult(data.product.product_name, "Base Mondiale");
+                    return;
+                }
+            } catch (e) {}
+
+            // 3. Fail
+            document.getElementById('product-name').innerText = "Produit non répertorié";
+            document.getElementById('status').innerText = "CODE: " + code;
+            document.getElementById('google-btn-area').style.display = "block";
         }
 
-        function addToHistory(n) {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = `<b>${n}</b> <span style="float:right; font-size:10px;">${new Date().toLocaleTimeString()}</span>`;
-            document.getElementById('history-list').prepend(item);
+        function showResult(name, source, price = "") {
+            document.getElementById('product-name').innerText = name;
+            document.getElementById('status').innerText = "VIA : " + source;
+            if(price) document.getElementById('product-price').innerText = price + " FCFA";
+            addToHistory(name, price);
+        }
+
+        function searchGoogle() {
+            window.open("https://www.google.com/search?q=produit+codebarre+" + lastScannedCode, "_blank");
+        }
+
+        function showManual() { document.getElementById('manual-ci').style.display = "block"; }
+
+        function saveToCI() {
+            const n = document.getElementById('in-name').value;
+            const p = document.getElementById('in-price').value;
+            if(!n) return;
+            localStorage.setItem("ci_db_" + lastScannedCode, JSON.stringify({name: n, price: p}));
+            showResult(n, "Catalogue Personnel", p);
+            document.getElementById('manual-ci').style.display = "none";
+        }
+
+        function addToHistory(n, p) {
+            const h = document.getElementById('history-list');
+            const d = document.createElement('div');
+            d.style = "background:#111; padding:10px; border-bottom:1px solid #222; font-size:13px;";
+            d.innerHTML = `<b>${n}</b> ${p ? '<span style="color:orange">'+p+' FCFA</span>' : ''} <span style="float:right; font-size:10px; color:#444;">${new Date().toLocaleTimeString()}</span>`;
+            h.prepend(d);
         }
 
         function toggleFlash() {
             if(videoTrack) {
-                isFlashOn = !isFlashOn;
-                videoTrack.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+                const cur = videoTrack.getSettings().torch;
+                videoTrack.applyConstraints({ advanced: [{ torch: !cur }] });
             }
         }
 
-        window.onload = () => {
-            if(localStorage.getItem('onyx_user')) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('user-display').innerText = localStorage.getItem('onyx_user').toUpperCase();
-                startScanner();
-            }
-        };
+        window.onload = init;
     </script>
 </body>
-    </html>
+</html>
